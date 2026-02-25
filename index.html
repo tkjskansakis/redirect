@@ -9,7 +9,10 @@
         .card { background: white; padding: 40px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); max-width: 400px; width: 90%; border-top: 5px solid #d32f2f; }
         h2 { color: #1a237e; font-size: 1.3rem; margin-bottom: 5px; }
         .alert { background: #ffebee; color: #c62828; padding: 15px; border-radius: 8px; margin: 20px 0; font-weight: bold; border: 1px solid #ffcdd2; }
-        .btn { display: inline-block; background: #1a237e; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; cursor: pointer; border: none; }
+        .btn { display: inline-block; background: #1a237e; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; cursor: pointer; border: none; width: 100%; margin-bottom: 10px; }
+        .btn-copy { background: #454545; font-size: 0.8rem; }
+        .ua-box { background: #eee; font-size: 0.85rem; padding: 15px; border-radius: 8px; word-break: break-all; color: #333; margin-top: 20px; text-align: left; border: 1px solid #ddd; }
+        .ua-title { font-weight: bold; font-size: 0.7rem; color: #777; margin-bottom: 5px; display: block; }
     </style>
 </head>
 <body>
@@ -28,9 +31,7 @@
         const hour = now.getHours();
         let isTimeValid = true; 
 
-        /** * UNTUK MENGAKTIFKAN PEMBATASAN JAM (07:00 - 15:00):
-         * Hilangkan tanda komentar ( // ) pada baris di bawah ini.
-         */
+        // Untuk mengaktifkan pembatasan jam (07:00 - 15:00), hapus tanda // di bawah ini:
         // if (hour < 7 || hour >= 15) { isTimeValid = false; }
 
         if (!isTimeValid) {
@@ -43,7 +44,7 @@
             const allowedKeywords = ['Exambro', 'CBT', 'Kiosk', 'Android', 'Version/4.0', 'wv'];
             let isValid = allowedKeywords.some(k => ua.toLowerCase().includes(k.toLowerCase()));
             
-            // Blokir otomatis jika terdeteksi Windows atau Mac
+            // Blokir jika terdeteksi Windows atau Mac
             if (ua.includes('Windows') || ua.includes('Macintosh')) {
                 isValid = false;
             }
@@ -56,15 +57,32 @@
                     document.getElementById('app').innerHTML = `<h2>Error</h2><p>Kode link tidak valid.</p>`;
                 }
             } else {
+                // Tampilan Akses Ditolak dengan Fitur Salin ID
                 document.getElementById('app').innerHTML = `
                     <h2>ASAJ 2025/2026</h2>
                     <strong>SMK Negeri 1 Kismantoro</strong>
                     <div class="alert">AKSES DITOLAK!</div>
                     <p>Gunakan aplikasi <b>Exambro Resmi</b> untuk mengerjakan soal.</p>
-                    <button onclick="location.reload()" class="btn">Coba Lagi</button>
-                    <div style="font-size:0.6rem; color:#ccc; margin-top:20px; word-break:break-all;">${ua}</div>
+                    
+                    <button onclick="location.reload()" class="btn">COBA LAGI</button>
+                    <button onclick="copyUA()" class="btn btn-copy">SALIN ID PERANGKAT</button>
+                    
+                    <div class="ua-box">
+                        <span class="ua-title">ID PERANGKAT (USER-AGENT):</span>
+                        <span id="uaText">${ua}</span>
+                    </div>
                 `;
             }
+        }
+
+        // Fungsi Salin ID Perangkat
+        function copyUA() {
+            const textToCopy = document.getElementById('uaText').innerText;
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                alert('ID Perangkat berhasil disalin!');
+            }).catch(err => {
+                alert('Gagal menyalin. Silakan screenshot layar ini.');
+            });
         }
     </script>
 </body>
