@@ -4,9 +4,9 @@
     <meta charset="utf-8">
     <title>Redirecting...</title>
     <script type="text/javascript">
-        // Arahkan semua request 404 kembali ke index dengan membawa parameternya
-        var pathSegments = window.location.pathname.split('/');
-        window.location.replace(window.location.protocol + '//' + window.location.hostname + (window.location.port ? ':' + window.location.port : '') + '/?code=' + new URLSearchParams(window.location.search).get('code'));
+        var urlParams = new URLSearchParams(window.location.search);
+        var code = urlParams.get('code');
+        window.location.replace(window.location.protocol + '//' + window.location.hostname + (window.location.port ? ':' + window.location.port : '') + '/?code=' + code);
     </script>
 </head>
 <body>
