@@ -31,7 +31,7 @@
         const hour = now.getHours();
         let isTimeValid = true; 
 
-        // Untuk mengaktifkan pembatasan jam (07:00 - 15:00), hapus tanda // di bawah ini:
+        // Untuk aktifkan pembatasan jam (07:00-15:00), hapus tanda // di bawah:
         // if (hour < 7 || hour >= 15) { isTimeValid = false; }
 
         if (!isTimeValid) {
@@ -40,29 +40,30 @@
                 <p>Ujian hanya dapat diakses antara pukul 07:00 - 15:00 WIB.</p>
             `;
         } else {
-            // --- FILTER PERANGKAT ---
-            const allowedKeywords = ['Exambro', 'CBT', 'Kiosk', 'Android', 'Version/4.0', 'wv'];
+            // --- FILTER PERANGKAT KETAT ---
+            // Menghapus 'Android' agar Chrome HP tidak bisa masuk
+            const allowedKeywords = ['Exambro', 'CBT', 'Kiosk', 'Version/4.0', 'wv'];
             let isValid = allowedKeywords.some(k => ua.toLowerCase().includes(k.toLowerCase()));
             
-            // Blokir jika terdeteksi Windows atau Mac
-            if (ua.includes('Windows') || ua.includes('Macintosh')) {
-                isValid = false;
+            // Blokir mutlak untuk PC & Browser HP Biasa
+            if (ua.includes('Windows') || ua.includes('Macintosh') || (ua.includes('Chrome') && !ua.includes('wv'))) {
+                // Jika mengandung 'Chrome' tapi bukan 'wv' (Webview Exambro), maka blokir.
+                if (!ua.includes('Exambro')) isValid = false;
             }
 
             if (isValid && code) {
                 try {
-                    const targetUrl = atob(code); 
-                    window.location.replace(targetUrl); 
+                    const targetUrl = atob(code);
+                    window.location.replace(targetUrl);
                 } catch (e) {
                     document.getElementById('app').innerHTML = `<h2>Error</h2><p>Kode link tidak valid.</p>`;
                 }
             } else {
-                // Tampilan Akses Ditolak dengan Fitur Salin ID
                 document.getElementById('app').innerHTML = `
                     <h2>ASAJ 2025/2026</h2>
                     <strong>SMK Negeri 1 Kismantoro</strong>
                     <div class="alert">AKSES DITOLAK!</div>
-                    <p>Gunakan <b>Exambrowser</b> untuk mengerjakan soal.</p>
+                    <p>Gunakan aplikasi <b>Exambro Resmi</b> untuk mengerjakan soal.</p>
                     
                     <button onclick="location.reload()" class="btn">COBA LAGI</button>
                     <button onclick="copyUA()" class="btn btn-copy">SALIN ID PERANGKAT</button>
@@ -75,13 +76,12 @@
             }
         }
 
-        // Fungsi Salin ID Perangkat
         function copyUA() {
             const textToCopy = document.getElementById('uaText').innerText;
             navigator.clipboard.writeText(textToCopy).then(() => {
                 alert('ID Perangkat berhasil disalin!');
             }).catch(err => {
-                alert('Gagal menyalin. Silakan screenshot layar ini.');
+                alert('Gagal menyalin.');
             });
         }
     </script>
