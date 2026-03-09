@@ -40,15 +40,16 @@
                 <p>Ujian hanya dapat diakses antara pukul 07:00 - 15:00 WIB.</p>
             `;
         } else {
-            // --- FILTER PERANGKAT KETAT ---
-            // Menghapus 'Android' agar Chrome HP tidak bisa masuk
-            const allowedKeywords = ['Exambro', 'CBT', 'Kiosk', 'Version/4.0', 'wv'];
+            /** * --- FILTER PERANGKAT KETAT ---
+             * Menambahkan 'SEB' untuk mendukung Safe Exam Browser di iPhone
+             */
+            const allowedKeywords = ['Exambro', 'CBT', 'Kiosk', 'Version/4.0', 'wv', 'SEB'];
             let isValid = allowedKeywords.some(k => ua.toLowerCase().includes(k.toLowerCase()));
             
-            // Blokir mutlak untuk PC & Browser HP Biasa
-            if (ua.includes('Windows') || ua.includes('Macintosh') || (ua.includes('Chrome') && !ua.includes('wv'))) {
-                // Jika mengandung 'Chrome' tapi bukan 'wv' (Webview Exambro), maka blokir.
-                if (!ua.includes('Exambro')) isValid = false;
+            // Logika Blokir PC & Browser Biasa
+            // Jika mengandung 'Chrome' atau 'Safari' tapi bukan Webview/SEB, maka blokir.
+            if (ua.includes('Windows') || ua.includes('Macintosh')) {
+                isValid = false;
             }
 
             if (isValid && code) {
@@ -63,7 +64,7 @@
                     <h2>ASAJ 2025/2026</h2>
                     <strong>SMK Negeri 1 Kismantoro</strong>
                     <div class="alert">AKSES DITOLAK!</div>
-                    <p>Gunakan aplikasi <b>Exambro Resmi</b> untuk mengerjakan soal.</p>
+                    <p>Gunakan aplikasi <b>Exambro Resmi</b> atau <b>Safe Exam Browser</b> untuk mengerjakan soal.</p>
                     
                     <button onclick="location.reload()" class="btn">COBA LAGI</button>
                     <button onclick="copyUA()" class="btn btn-copy">SALIN ID PERANGKAT</button>
