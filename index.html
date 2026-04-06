@@ -5,10 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ASAJ 2025/2026 - SMK Negeri 1 Kismantoro</title>
     <style>
-        body { font-family: sans-serif; background: #f4f7f6; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; text-align: center; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f7f6; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; text-align: center; }
         .card { background: white; padding: 40px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); max-width: 400px; width: 90%; border-top: 5px solid #d32f2f; }
-        .btn { display: inline-block; background: #1a237e; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; cursor: pointer; width: 100%; border: none; margin-top: 10px; }
-        .status { color: #d32f2f; font-weight: bold; margin: 15px 0; }
+        h2 { color: #1a237e; font-size: 1.3rem; margin-bottom: 5px; }
+        .alert { background: #ffebee; color: #c62828; padding: 15px; border-radius: 8px; margin: 20px 0; font-weight: bold; border: 1px solid #ffcdd2; }
+        .btn { display: inline-block; background: #1a237e; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; cursor: pointer; border: none; width: 100%; margin-bottom: 10px; }
+        .btn-copy { background: #454545; font-size: 0.8rem; }
+        .ua-box { background: #eee; font-size: 0.85rem; padding: 15px; border-radius: 8px; word-break: break-all; color: #333; margin-top: 20px; text-align: left; border: 1px solid #ddd; }
+        .ua-title { font-weight: bold; font-size: 0.7rem; color: #777; margin-bottom: 5px; display: block; }
     </style>
 </head>
 <body>
@@ -21,52 +25,65 @@
         const urlParams = new URLSearchParams(window.location.search);
         const code = urlParams.get('code');
         const ua = navigator.userAgent;
-        const isIphone = /iPhone|iPad|iPod/.test(ua);
-        const isSEB = ua.includes('SEB');
+        
+        // --- PENGATURAN WAKTU ---
+        const now = new Date();
+        const hour = now.getHours();
+        let isTimeValid = true; 
 
-        // 1. Logika Deteksi Minimize (Putus Koneksi)
-        document.addEventListener("visibilitychange", function() {
-            if (document.hidden) {
-                // Hapus sesi izin dan paksa refresh saat ditinggalkan
-                sessionStorage.removeItem("isVerified");
-                window.location.href = window.location.pathname; // Kembali ke halaman bersih tanpa kode
-            }
-        });
+        // Untuk aktifkan pembatasan jam (07:00-15:00), hapus tanda // di bawah:
+        // if (hour < 7 || hour >= 15) { isTimeValid = false; }
 
-        // 2. Cek Izin Akses
-        if (isIphone && !isSEB) {
-            const sebLink = window.location.href.replace("https://", "seb://");
+        if (!isTimeValid) {
             document.getElementById('app').innerHTML = `
-                <h2>Gunakan SEB</h2>
-                <p>Klik tombol untuk mengunci iPhone ke mode ujian.</p>
-                <a href="${sebLink}" class="btn">BUKA DI SEB</a>
+                <h2>Akses Ditutup</h2>
+                <p>Ujian hanya dapat diakses antara pukul 07:00 - 15:00 WIB.</p>
             `;
         } else {
-            const allowed = ['Exambro', 'CBT', 'Kiosk', 'Version/4.0', 'wv', 'SEB'];
-            let isValid = allowed.some(k => ua.toLowerCase().includes(k.toLowerCase()));
+            /** * --- FILTER PERANGKAT KETAT ---
+             * Menambahkan 'SEB' untuk mendukung Safe Exam Browser di iPhone
+             */
+            const allowedKeywords = ['Exambro', 'CBT', 'Kiosk', 'Version/4.0', 'wv', 'SEB'];
+            let isValid = allowedKeywords.some(k => ua.toLowerCase().includes(k.toLowerCase()));
             
-            if (ua.includes('Windows') || ua.includes('Macintosh')) { isValid = false; }
+            // Logika Blokir PC & Browser Biasa
+            // Jika mengandung 'Chrome' atau 'Safari' tapi bukan Webview/SEB, maka blokir.
+            if (ua.includes('Windows') || ua.includes('Macintosh')) {
+                isValid = false;
+            }
 
-            // Jika valid dan ada kode, berikan izin sesi
             if (isValid && code) {
-                sessionStorage.setItem("isVerified", "true");
                 try {
                     const targetUrl = atob(code);
                     window.location.replace(targetUrl);
                 } catch (e) {
-                    document.getElementById('app').innerHTML = "<h2>Error</h2><p>Link tidak valid.</p>";
+                    document.getElementById('app').innerHTML = `<h2>Error</h2><p>Kode link tidak valid.</p>`;
                 }
             } else {
-                // Tampilan jika koneksi terputus/habis (Siswa harus scan ulang)
                 document.getElementById('app').innerHTML = `
                     <h2>ASAJ 2025/2026</h2>
                     <strong>SMK Negeri 1 Kismantoro</strong>
-                    <div class="status">KONEKSI TERPUTUS</div>
-                    <p>Sesi ujian berakhir karena Anda meninggalkan aplikasi.</p>
-                    <p>Silakan <b>Scan QR Soal</b> kembali untuk melanjutkan.</p>
-                    <div style="font-size:0.7rem; color:#999; margin-top:20px;">ID: ${ua}</div>
+                    <div class="alert">AKSES DITOLAK!</div>
+                    <p>Gunakan aplikasi <b>Exambro Resmi</b> atau <b>Safe Exam Browser</b> untuk mengerjakan soal.</p>
+                    
+                    <button onclick="location.reload()" class="btn">COBA LAGI</button>
+                    <button onclick="copyUA()" class="btn btn-copy">SALIN ID PERANGKAT</button>
+                    
+                    <div class="ua-box">
+                        <span class="ua-title">ID PERANGKAT (USER-AGENT):</span>
+                        <span id="uaText">${ua}</span>
+                    </div>
                 `;
             }
+        }
+
+        function copyUA() {
+            const textToCopy = document.getElementById('uaText').innerText;
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                alert('ID Perangkat berhasil disalin!');
+            }).catch(err => {
+                alert('Gagal menyalin.');
+            });
         }
     </script>
 </body>
