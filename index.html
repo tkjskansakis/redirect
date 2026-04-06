@@ -7,9 +7,8 @@
     <style>
         body { font-family: sans-serif; background: #f4f7f6; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; text-align: center; }
         .card { background: white; padding: 40px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); max-width: 400px; width: 90%; border-top: 5px solid #d32f2f; }
-        .alert { background: #ffebee; color: #c62828; padding: 15px; border-radius: 8px; margin: 20px 0; font-weight: bold; }
-        .btn { display: inline-block; background: #1a237e; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; cursor: pointer; width: 100%; border: none; }
-        .ua-box { background: #eee; font-size: 0.8rem; padding: 10px; border-radius: 5px; word-break: break-all; margin-top: 20px; text-align: left; }
+        .btn { display: inline-block; background: #1a237e; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; cursor: pointer; width: 100%; border: none; margin-top: 10px; }
+        .status { color: #d32f2f; font-weight: bold; margin: 15px 0; }
     </style>
 </head>
 <body>
@@ -25,44 +24,47 @@
         const isIphone = /iPhone|iPad|iPod/.test(ua);
         const isSEB = ua.includes('SEB');
 
-        // 1. CEK JAM OPERASIONAL (07:00 - 15:00)
-        const now = new Date();
-        const hour = now.getHours();
-        // if (hour < 7 || hour >= 15) { 
-        //    document.getElementById('app').innerHTML = "<h2>Akses Ditutup</h2><p>Ujian pukul 07:00-15:00.</p>";
-        // } else { ... }
+        // 1. Logika Deteksi Minimize (Putus Koneksi)
+        document.addEventListener("visibilitychange", function() {
+            if (document.hidden) {
+                // Hapus sesi izin dan paksa refresh saat ditinggalkan
+                sessionStorage.removeItem("isVerified");
+                window.location.href = window.location.pathname; // Kembali ke halaman bersih tanpa kode
+            }
+        });
 
-        // 2. LOGIKA PROTEKSI IPHONE (CEK SEB)
+        // 2. Cek Izin Akses
         if (isIphone && !isSEB) {
             const sebLink = window.location.href.replace("https://", "seb://");
             document.getElementById('app').innerHTML = `
                 <h2>Gunakan SEB</h2>
-                <p>Klik tombol di bawah untuk mengunci iPhone ke mode ujian.</p>
+                <p>Klik tombol untuk mengunci iPhone ke mode ujian.</p>
                 <a href="${sebLink}" class="btn">BUKA DI SEB</a>
             `;
         } else {
-            // 3. FILTER USER-AGENT KETAT (Hanya Exambro / SEB)
             const allowed = ['Exambro', 'CBT', 'Kiosk', 'Version/4.0', 'wv', 'SEB'];
             let isValid = allowed.some(k => ua.toLowerCase().includes(k.toLowerCase()));
             
-            // Blokir Windows/Mac
             if (ua.includes('Windows') || ua.includes('Macintosh')) { isValid = false; }
 
+            // Jika valid dan ada kode, berikan izin sesi
             if (isValid && code) {
+                sessionStorage.setItem("isVerified", "true");
                 try {
                     const targetUrl = atob(code);
                     window.location.replace(targetUrl);
                 } catch (e) {
-                    document.getElementById('app').innerHTML = "<h2>Error</h2><p>Link salah.</p>";
+                    document.getElementById('app').innerHTML = "<h2>Error</h2><p>Link tidak valid.</p>";
                 }
             } else {
-                // 4. TAMPILAN BLOKIR (Mencegah Akses Browser Biasa/Minimize)
+                // Tampilan jika koneksi terputus/habis (Siswa harus scan ulang)
                 document.getElementById('app').innerHTML = `
                     <h2>ASAJ 2025/2026</h2>
-                    <div class="alert">AKSES DITOLAK!</div>
-                    <p>Wajib menggunakan <b>Exambro</b> (Android) atau <b>Safe Exam Browser</b> (iOS).</p>
-                    <button onclick="location.reload()" class="btn">COBA LAGI</button>
-                    <div class="ua-box"><b>ID Perangkat:</b><br>${ua}</div>
+                    <strong>SMK Negeri 1 Kismantoro</strong>
+                    <div class="status">KONEKSI TERPUTUS</div>
+                    <p>Sesi ujian berakhir karena Anda meninggalkan aplikasi.</p>
+                    <p>Silakan <b>Scan QR Soal</b> kembali untuk melanjutkan.</p>
+                    <div style="font-size:0.7rem; color:#999; margin-top:20px;">ID: ${ua}</div>
                 `;
             }
         }
